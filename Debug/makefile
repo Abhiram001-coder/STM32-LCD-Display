@@ -34,34 +34,34 @@ $(wildcard ../makefile.init) \
 $(wildcard ../makefile.targets) \
 
 
-BUILD_ARTIFACT_NAME := i2c
+BUILD_ARTIFACT_NAME := String_Display_using_I2C_BUS
 BUILD_ARTIFACT_EXTENSION := elf
 BUILD_ARTIFACT_PREFIX :=
 BUILD_ARTIFACT := $(BUILD_ARTIFACT_PREFIX)$(BUILD_ARTIFACT_NAME)$(if $(BUILD_ARTIFACT_EXTENSION),.$(BUILD_ARTIFACT_EXTENSION),)
 
 # Add inputs and outputs from these tool invocations to the build variables 
 EXECUTABLES += \
-i2c.elf \
+String_Display_using_I2C_BUS.elf \
 
 MAP_FILES += \
-i2c.map \
+String_Display_using_I2C_BUS.map \
 
 SIZE_OUTPUT += \
 default.size.stdout \
 
 OBJDUMP_LIST += \
-i2c.list \
+String_Display_using_I2C_BUS.list \
 
 
 # All Target
 all: main-build
 
 # Main-build Target
-main-build: i2c.elf secondary-outputs
+main-build: String_Display_using_I2C_BUS.elf secondary-outputs
 
 # Tool invocations
-i2c.elf i2c.map: $(OBJS) $(USER_OBJS) D:\stm32\projects\i2c\STM32G070RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "i2c.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"D:\stm32\projects\i2c\STM32G070RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="i2c.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+String_Display_using_I2C_BUS.elf String_Display_using_I2C_BUS.map: $(OBJS) $(USER_OBJS) D:\LCD-interfacing-with-I2C-communication-using-STM32-Nucleo-G070-\STM32G070RBTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "String_Display_using_I2C_BUS.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"D:\LCD-interfacing-with-I2C-communication-using-STM32-Nucleo-G070-\STM32G070RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="String_Display_using_I2C_BUS.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -70,14 +70,14 @@ default.size.stdout: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
 	@echo 'Finished building: $@'
 	@echo ' '
 
-i2c.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "i2c.list"
+String_Display_using_I2C_BUS.list: $(EXECUTABLES) makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-objdump -h -S $(EXECUTABLES) > "String_Display_using_I2C_BUS.list"
 	@echo 'Finished building: $@'
 	@echo ' '
 
 # Other Targets
 clean:
-	-$(RM) default.size.stdout i2c.elf i2c.list i2c.map
+	-$(RM) String_Display_using_I2C_BUS.elf String_Display_using_I2C_BUS.list String_Display_using_I2C_BUS.map default.size.stdout
 	-@echo ' '
 
 secondary-outputs: $(SIZE_OUTPUT) $(OBJDUMP_LIST)

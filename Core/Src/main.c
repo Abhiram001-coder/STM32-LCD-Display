@@ -1,140 +1,88 @@
-/* USER CODE BEGIN Header */
-/**
-  ******************************************************************************
-  * @file           : main.c
-  * @brief          : Main program body
-  ******************************************************************************
-  * @attention
-  *
-  * Copyright (c) 2024 STMicroelectronics.
-  * All rights reserved.
-  *
-  * This software is licensed under terms that can be found in the LICENSE file
-  * in the root directory of this software component.
-  * If no LICENSE file comes with this software, it is provided AS-IS.
-  *
-  ******************************************************************************
-  */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+//PINOUT---------------------------------------
+
+//SDA of PCF8574t IC----> PA10 or D2 PIN of stm32
+//SCL of PCF8574t IC----> PA9 or D8 PIN of stm32
+//Vcc of PCF8574t IC----> 3v3 of stm32
+//gnd of PCF8574t IC----> gnd of stm32
+//CODE APPROACH-------------------------------------------
+//Steps to proceed the implementation of the code
+//Step 1: Change the slave address according to the I2C slave device you are using
+//Step 2: STM32 I2C1 module HAL driver Initialization {"static void MX_I2C1_Init(void)" locate to the function definition and change the MCU parameters for I2C1 peripheral according to your application}
+//Step 3: PCF8574t Driver Initialization
+//Step 4: Make sure you need to perform read operation or write operation, as we are interfacing LCD with STM32 we prefer write operation, we use "Master_Transfer_Config" function of STM32 inside our user defined function "stm_i2c_write1"
+//        Routines or arguments that are used in the STM32_Master_transfer_Config is commented above the function call
+//Step 5: If you want to display the string for a specific duration of time use delay or if you want to make the string sustain on the display without getting off use while(1)
+//
 #include "main.h"
+//Header file for driver
 #include "PCF8574T_LCD_Driver.h"
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 
-/* USER CODE END Includes */
-
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
+//In order to access the variables of the STM32_HAL_DRIVER for the peripheral I2C
 I2C_HandleTypeDef hi2c1;
-/* USER CODE BEGIN PV */
 
-/* USER CODE END PV */
-
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
 void stm_delay(uint16_t delay_ms);
+//User defined functions for writing strings at LCD via I2C BUS
 void stm_i2c_write1(uint8_t addr, uint8_t *pData, uint8_t send_data_len1);
 void stm_i2c_write2(uint8_t addr, uint8_t *pData, uint8_t send_data_len2);
+//Step 1: slave address i.e. pcf8574t IC's
 uint8_t addr_ = 0x27;
 uint8_t send_data_len1;
 uint8_t send_data_len2;
 
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
 	char outString1[] = "Hello Gotham!!!";
 	char outString2[]= "I'm Batman";
 	send_data_len1=sizeof(outString1);
 	send_data_len2=sizeof(outString2);
-  /* USER CODE BEGIN 1 */
 
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
+  // For configuring the system clock
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
+  // Initialize all configured peripherals
   MX_GPIO_Init();
+  //Step 2: Initialize the HAL_DRIVER for I2C1 peripheral (Which initializes all the parameters such as clock speed, duty cycle, addressing mode of MCU maybe 7 bit or 10 bit addressing)
   MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */
 
-  /* USER CODE END 2 */
+  //Step 3: Function call to the pcf8674t driver for initialization --> Follow 3rd argument stm_i2c_write for step 4
   PCF8574T_Init(0x27,stm_delay, stm_i2c_write1);
   PCF8574T_Init(0x27,stm_delay, stm_i2c_write2);
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+ //After initializing the slave address and making it to operate in 8-bit mode and configuring it in write operation
   while (1)
   {
-    /* USER CODE END WHILE */
+     /** Step 5: Displaying the string
+      * first argument indicates the data we need to pass
+      * second argument indicates the line we are going to print on the LCD display
+      */
 	  PCF8574T_displayString(outString1,1);
 	  HAL_Delay(1000);
 	  PCF8574T_displayString(outString2,2);
 	  HAL_Delay(1000);
 
-    /* USER CODE BEGIN 3 */
+
   }
-  /* USER CODE END 3 */
+
 }
 
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
+
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
-  */
+
   HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
 
-  /** Initializes the RCC Oscillators according to the specified parameters
-  * in the RCC_OscInitTypeDef structure.
-  */
+
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
@@ -145,8 +93,7 @@ void SystemClock_Config(void)
     Error_Handler();
   }
 
-  /** Initializes the CPU, AHB and APB buses clocks
-  */
+
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
@@ -159,21 +106,11 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
+
 static void MX_I2C1_Init(void)
 {
 
-  /* USER CODE BEGIN I2C1_Init 0 */
 
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
   hi2c1.Init.Timing = 0x00303D5B;
   hi2c1.Init.OwnAddress1 = 0;
@@ -188,47 +125,50 @@ static void MX_I2C1_Init(void)
     Error_Handler();
   }
 
-  /** Configure Analogue filter
-  */
+
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     Error_Handler();
   }
 
-  /** Configure Digital filter
-  */
+
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
 
-  /* USER CODE END I2C1_Init 2 */
 
 }
 
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
+
 static void MX_GPIO_Init(void)
 {
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
 
-  /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOF_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
+
 }
 
-/* USER CODE BEGIN 4 */
+/**
+ * Step 4: 1st argument as slave address
+ *         2nd argument as pointer which points the data buffer that we use to send the data
+ *         3rd argument length of data
+ */
 void stm_i2c_write1(uint8_t addr, uint8_t *pData, uint8_t send_data_len1)
 {
+	/**
+	 * @brief  Transmits in master mode an amount of data in blocking mode.
+  * @param  hi2c Pointer to a I2C_HandleTypeDef structure that contains
+  *                the configuration information for the specified I2C.
+  * @param  DevAddress Target device address: The device 7 bits address value
+  *         in datasheet must be shifted to the left before calling the interface
+  * @param  pData Pointer to data buffer
+  * @param  Size Amount of data to be sent
+  * @param  Timeout Timeout duration
+  * @retval HAL status
+	 */
     HAL_I2C_Master_Transmit(&hi2c1, addr<<1,pData, send_data_len1, 1000);
 }
 void stm_i2c_write2(uint8_t addr, uint8_t *pData, uint8_t send_data_len2)
@@ -240,36 +180,21 @@ void stm_delay(uint16_t delay_ms)
     HAL_Delay(delay_ms);
 }
 
-/* USER CODE END 4 */
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
 void Error_Handler(void)
 {
-  /* USER CODE BEGIN Error_Handler_Debug */
-  /* User can add his own implementation to report the HAL error return state */
+
   __disable_irq();
   while (1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */
+
 }
 
 #ifdef  USE_FULL_ASSERT
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
+
 void assert_failed(uint8_t *file, uint32_t line)
 {
-  /* USER CODE BEGIN 6 */
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-  /* USER CODE END 6 */
+
 }
-#endif /* USE_FULL_ASSERT */
+#endif
